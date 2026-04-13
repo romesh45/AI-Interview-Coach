@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Coach</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+            line-height: 1.5;
+        }
+
+        .card {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Interview Coach</h1>
+
+    <div class="card">
+        <h2>Sample Questions</h2>
+        <ul>
+            {% for question in questions %}
+            <li>{{ question }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Sample Evaluation</h2>
+        <p><strong>Score:</strong> {{ evaluation.score }}</p>
+        <p><strong>Feedback:</strong> {{ evaluation.feedback }}</p>
+        <p><strong>Suggestion:</strong> {{ evaluation.suggestion }}</p>
+    </div>
+</body>
+</html>
