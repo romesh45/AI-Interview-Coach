@@ -6,8 +6,9 @@ app = Flask(__name__, template_folder='../templates')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    questions = []
+    questions = None
     evaluation = None
+    error = None
     
     if request.method == 'POST':
         action = request.form.get('action')
@@ -15,13 +16,20 @@ def index():
         if action == 'generate':
             resume = request.form.get('resume', '')
             job_description = request.form.get('job_description', '')
-            questions = generate_questions(resume, job_description)
+            result = generate_questions(resume, job_description)
             
+            if 'error' in result:
+                error = result['error']
+            else:
+                questions = result
+                
         elif action == 'evaluate':
             answer = request.form.get('answer', '')
             evaluation = evaluate_answer(answer)
+            if 'score' in evaluation and evaluation['score'] == 'Error':
+                error = evaluation['feedback']
             
-    return render_template('index.html', questions=questions, evaluation=evaluation)
+    return render_template('index.html', questions=questions, evaluation=evaluation, error=error)
 
 if __name__ == '__main__':
     app.run(debug=True)

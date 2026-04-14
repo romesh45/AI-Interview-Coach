@@ -1,6 +1,7 @@
 QUESTION_GENERATION_PROMPT = """
 You are an expert technical recruiter. Based on the following resume and job description, 
-generate 3 highly relevant interview questions. Return ONLY the questions, separated by newlines. No numbering or bullet points.
+generate exactly 5 technical questions and 2 behavioral questions.
+Return ONLY a JSON object with two keys: "technical" (a list of 5 strings) and "behavioral" (a list of 2 strings).
 
 Resume:
 {resume}
