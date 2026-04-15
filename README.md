@@ -1,6 +1,6 @@
 # AI Interview Coach
 
-Phase 2 implementation with OpenAI integration for 5 technical and 2 behavioral questions.
+Phase 3 implementation: Question Generation and AI Answer Evaluation.
 
 ## Requirements
 - Python 3+

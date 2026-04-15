@@ -24,10 +24,17 @@ def index():
                 questions = result
                 
         elif action == 'evaluate':
+            question = request.form.get('question', '')
             answer = request.form.get('answer', '')
-            evaluation = evaluate_answer(answer)
-            if 'score' in evaluation and evaluation['score'] == 'Error':
-                error = evaluation['feedback']
+            result = evaluate_answer(question, answer)
+            
+            if 'error' in result:
+                error = result['error']
+                # we still want to show the partial fallback evaluation object if it has score/feedback
+                if 'score' in result:
+                    evaluation = result
+            else:
+                evaluation = result
             
     return render_template('index.html', questions=questions, evaluation=evaluation, error=error)
 

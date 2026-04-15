@@ -11,8 +11,11 @@ Job Description:
 """
 
 EVALUATION_PROMPT = """
-You are a senior hiring manager. Evaluate the following candidate answer based on clarity, 
-depth, and relevance. Return ONLY a JSON object with exactly three keys: "score", "feedback", and "improvement_suggestions".
+You are a senior hiring manager. Evaluate the following candidate answer to the given interview question based on clarity, 
+depth, and relevance. Return ONLY a JSON object with exactly three keys: "score" (a string or number from 0 to 10), "feedback", and "improvement_suggestions".
+
+Question:
+{question}
 
 Candidate Answer:
 {answer}

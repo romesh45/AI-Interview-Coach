@@ -29,10 +29,10 @@
         <form method="POST">
             <input type="hidden" name="action" value="generate">
             <label for="resume">Resume:</label>
-            <textarea name="resume" id="resume" placeholder="Paste resume here..."></textarea>
+            <textarea name="resume" id="resume" placeholder="Paste your resume here..."></textarea>
             
             <label for="job_description">Job Description:</label>
-            <textarea name="job_description" id="job_description" placeholder="Paste job description here..."></textarea>
+            <textarea name="job_description" id="job_description" placeholder="Paste the job description here..."></textarea>
             
             <button type="submit">Generate Questions</button>
         </form>
@@ -60,8 +60,13 @@
         <h2>2. Evaluate Answer</h2>
         <form method="POST">
             <input type="hidden" name="action" value="evaluate">
+            
+            <label for="question">Interview Question:</label>
+            <textarea name="question" id="question" placeholder="Paste a question here..."></textarea>
+            
             <label for="answer">Your Answer:</label>
-            <textarea name="answer" id="answer" placeholder="Paste your answer here..."></textarea>
+            <textarea name="answer" id="answer" placeholder="Type your answer here..."></textarea>
+            
             <button type="submit">Evaluate Answer</button>
         </form>
     </div>
@@ -69,7 +74,7 @@
     {% if evaluation %}
     <div class="section">
         <h2>Evaluation Result:</h2>
-        <p><strong>Score:</strong> {{ evaluation.score }}</p>
+        <p><strong>Score:</strong> {{ evaluation.score }} / 10</p>
         <p><strong>Feedback:</strong> {{ evaluation.feedback }}</p>
         <p><strong>Improvement Suggestions:</strong> {{ evaluation.improvement_suggestions }}</p>
     </div>
