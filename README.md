@@ -5,7 +5,7 @@ Phase 3 implementation: Question Generation and AI Answer Evaluation.
 ## Requirements
 - Python 3+
 - Flask
-- OpenAI API Key
+- OpenAI
 
 ## Run
 
