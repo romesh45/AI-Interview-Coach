@@ -26,10 +26,15 @@ def generate_questions(resume: str, job_description: str) -> dict:
         # Transform new prompt's array structure to the UI expected dict structure
         formatted_questions = {"technical": [], "behavioral": []}
         for item in raw_output.get("questions", []):
+            mapped_item = {
+                "question": item.get("question", ""),
+                "skill": item.get("skill", ""),
+                "difficulty": item.get("difficulty", "")
+            }
             if item.get("type") == "technical":
-                formatted_questions["technical"].append(item.get("question"))
+                formatted_questions["technical"].append(mapped_item)
             elif item.get("type") == "behavioral":
-                formatted_questions["behavioral"].append(item.get("question"))
+                formatted_questions["behavioral"].append(mapped_item)
                 
         return formatted_questions
     except Exception as e:

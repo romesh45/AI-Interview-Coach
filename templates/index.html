@@ -71,8 +71,12 @@
         <p style="color: #555;">Review the generated questions below. Answer them one by one to get AI-powered feedback. You can revise and resubmit answers to improve your score.</p>
         
         <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px;">Technical Questions</h3>
-        {% for q in questions.technical %}
+        {% for q_item in questions.technical %}
+            {% set q = q_item.question if q_item is mapping else q_item %}
             <div class="card">
+                {% if q_item.skill %}
+                <div style="margin-bottom: 5px;"><span style="background: #eef; color: #007bff; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-right: 5px;">{{ q_item.skill }}</span> <span style="background: #fdf2f2; color: #dc3545; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">{{ q_item.difficulty | title }}</span></div>
+                {% endif %}
                 <p><strong>Question:</strong> {{ q }}</p>
                 <form method="POST" onsubmit="showLoading(this.querySelector('button'))">
                     <input type="hidden" name="action" value="evaluate">
@@ -96,8 +100,12 @@
         {% endfor %}
         
         <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 40px;">Behavioral Questions</h3>
-        {% for q in questions.behavioral %}
+        {% for q_item in questions.behavioral %}
+            {% set q = q_item.question if q_item is mapping else q_item %}
             <div class="card">
+                {% if q_item.skill %}
+                <div style="margin-bottom: 5px;"><span style="background: #eef; color: #007bff; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-right: 5px;">{{ q_item.skill }}</span> <span style="background: #fdf2f2; color: #dc3545; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">{{ q_item.difficulty | title }}</span></div>
+                {% endif %}
                 <p><strong>Question:</strong> {{ q }}</p>
                 <form method="POST" onsubmit="showLoading(this.querySelector('button'))">
                     <input type="hidden" name="action" value="evaluate">
