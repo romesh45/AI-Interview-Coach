@@ -1,5 +1,8 @@
 import os
 from flask import Flask, render_template, request, session, redirect, url_for
+from dotenv import load_dotenv
+
+load_dotenv()
 from question_generator import generate_questions
 from evaluator import evaluate_answer
 

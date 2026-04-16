@@ -17,16 +17,16 @@ Rules:
 - Output JSON only
 
 JSON format:
-{
+{{
   "questions": [
-    {
+    {{
       "type": "technical",
       "skill": "string",
       "difficulty": "easy|medium|hard",
       "question": "string"
-    }
+    }}
   ]
-}
+}}
 
 Resume:
 {resume_text}
@@ -35,10 +35,10 @@ Job Description:
 {job_description}
 """
 
-EVALUATION_PROMPT = """
+ANSWER_EVALUATION_PROMPT = """
 You are a strict but fair senior interviewer.
 
-Evaluate the candidate answer against the question.
+Evaluate the candidate’s answer to the interview question.
 
 Scoring rubric:
 - 0–2: incorrect, irrelevant, or extremely weak
@@ -56,21 +56,21 @@ Evaluation criteria:
 - communication quality
 
 Instructions:
-- Return JSON only
-- Keep feedback direct and specific
+- Return valid JSON only
+- Be direct, honest, and constructive
 - Mention what was good
 - Mention what was missing
-- Give 3 actionable improvements
+- Give exactly 3 actionable improvement suggestions
 - Do not be overly nice if the answer is weak
 
 JSON format:
-{
+{{
   "score": 0,
   "feedback": "string",
   "strengths": ["string", "string"],
   "gaps": ["string", "string"],
   "improvement_suggestions": ["string", "string", "string"]
-}
+}}
 
 Question:
 {question}

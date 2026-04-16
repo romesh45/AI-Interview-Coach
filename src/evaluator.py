@@ -1,27 +1,38 @@
 import json
 from openai import OpenAI
-from prompts import EVALUATION_PROMPT
+from prompts import ANSWER_EVALUATION_PROMPT
 
 client = OpenAI()
 
 def evaluate_answer(question: str, answer: str) -> dict:
-    """Uses OpenAI to evaluate candidate answers."""
     if not question.strip() or not answer.strip():
         return {"error": "Question and Answer cannot be empty."}
 
-    prompt = EVALUATION_PROMPT.format(question=question, answer=answer)
+    prompt = ANSWER_EVALUATION_PROMPT.format(question=question, answer=answer)
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            response_format={ "type": "json_object" },
+            model="gpt-5.4-mini",
+            response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}]
         )
-        return json.loads(response.choices[0].message.content)
-    except Exception as e:
-        return {
-            "error": "Failed to parse OpenAI response or API error.",
-            "score": "N/A",
-            "feedback": str(e),
-            "improvement_suggestions": "Please try submitting the answer again."
+        
+        parsed_json = json.loads(response.choices[0].message.content)
+        
+        if not isinstance(parsed_json, dict):
+            raise ValueError("Invalid JSON structure: Output must be an object.")
+            
+        evaluation = {
+            "score": parsed_json.get("score", "N/A"),
+            "feedback": parsed_json.get("feedback", "No feedback provided."),
+            "strengths": parsed_json.get("strengths") if isinstance(parsed_json.get("strengths"), list) else [],
+            "gaps": parsed_json.get("gaps") if isinstance(parsed_json.get("gaps"), list) else [],
+            "improvement_suggestions": parsed_json.get("improvement_suggestions") if isinstance(parsed_json.get("improvement_suggestions"), list) else []
         }
+        
+        return evaluation
+
+    except json.JSONDecodeError:
+        return {"error": "Failed to parse API response as JSON."}
+    except Exception as e:
+        return {"error": f"Failed to evaluate answer: {str(e)}"}
