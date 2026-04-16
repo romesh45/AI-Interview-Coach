@@ -36,28 +36,40 @@ Job Description:
 """
 
 EVALUATION_PROMPT = """
-You are an expert interview evaluator.
+You are a strict but fair senior interviewer.
 
-Evaluate the candidate’s answer to the interview question.
+Evaluate the candidate answer against the question.
+
+Scoring rubric:
+- 0–2: incorrect, irrelevant, or extremely weak
+- 3–4: partially correct but shallow or unclear
+- 5–6: acceptable but missing depth, examples, or precision
+- 7–8: strong and mostly correct with good communication
+- 9–10: excellent, precise, well-structured, and role-ready
+
+Evaluation criteria:
+- relevance to the question
+- correctness
+- depth
+- structure and clarity
+- practical understanding
+- communication quality
 
 Instructions:
-- Score the answer from 0 to 10
-- Judge relevance, clarity, technical correctness, depth, and communication
-- Be honest but constructive
-- Feedback must be specific
-- Improvement suggestions must be actionable
-- Keep evaluation concise and useful
-- Return valid JSON only
+- Return JSON only
+- Keep feedback direct and specific
+- Mention what was good
+- Mention what was missing
+- Give 3 actionable improvements
+- Do not be overly nice if the answer is weak
 
-Required JSON format:
+JSON format:
 {
   "score": 0,
   "feedback": "string",
-  "improvement_suggestions": [
-    "string",
-    "string",
-    "string"
-  ]
+  "strengths": ["string", "string"],
+  "gaps": ["string", "string"],
+  "improvement_suggestions": ["string", "string", "string"]
 }
 
 Question:

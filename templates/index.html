@@ -88,6 +88,25 @@
                 <div class="eval-result">
                     <p><strong>Score:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">{{ evaluations[q].evaluation.score }} / 10</span></p>
                     <p><strong>Feedback:</strong> {{ evaluations[q].evaluation.feedback }}</p>
+                    
+                    {% if evaluations[q].evaluation.strengths %}
+                    <p><strong>Strengths:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for item in evaluations[q].evaluation.strengths %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    
+                    {% if evaluations[q].evaluation.gaps %}
+                    <p><strong>Gaps:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for item in evaluations[q].evaluation.gaps %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    
                     <p><strong>How to Improve:</strong></p>
                     <ul style="margin-top: 5px; padding-left: 20px;">
                         {% for suggestion in evaluations[q].evaluation.improvement_suggestions %}
@@ -117,6 +136,25 @@
                 <div class="eval-result">
                     <p><strong>Score:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">{{ evaluations[q].evaluation.score }} / 10</span></p>
                     <p><strong>Feedback:</strong> {{ evaluations[q].evaluation.feedback }}</p>
+                    
+                    {% if evaluations[q].evaluation.strengths %}
+                    <p><strong>Strengths:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for item in evaluations[q].evaluation.strengths %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    
+                    {% if evaluations[q].evaluation.gaps %}
+                    <p><strong>Gaps:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for item in evaluations[q].evaluation.gaps %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    
                     <p><strong>How to Improve:</strong></p>
                     <ul style="margin-top: 5px; padding-left: 20px;">
                         {% for suggestion in evaluations[q].evaluation.improvement_suggestions %}
