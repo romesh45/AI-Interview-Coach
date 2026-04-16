@@ -5,79 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interview Coach</title>
     <style>
-        body { font-family: sans-serif; margin: 40px auto; max-width: 800px; line-height: 1.6; }
-        .section { padding: 20px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px;}
-        textarea { width: 100%; height: 100px; margin-bottom: 10px; }
-        button { padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 800px; line-height: 1.6; color: #333; }
+        .section { padding: 25px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
+        textarea { width: 100%; height: 100px; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+        textarea:focus { border-color: #007bff; outline: none; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 14px; transition: background 0.2s;}
         button:hover { background: #0056b3; }
-        h1, h2, h3 { color: #333; }
-        .error { border-color: red; color: red; }
+        .btn-reset { background: #dc3545; }
+        .btn-reset:hover { background: #c82333; }
+        h1, h2, h3 { color: #111; margin-top: 0; }
+        .error { border-color: #dc3545; background-color: #fdf2f2; }
+        .error p { color: #dc3545; margin: 0; font-weight: 500; }
+        .eval-result { margin-top: 15px; background: #f0f7ff; padding: 15px; border-radius: 6px; border-left: 4px solid #007bff; }
+        .eval-result p { margin: 5px 0; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .loading { opacity: 0.7; pointer-events: none; }
     </style>
+    <script>
+        function showLoading(btn) {
+            btn.innerHTML = 'Processing...';
+            btn.classList.add('loading');
+            setTimeout(() => { btn.disabled = true; }, 10);
+        }
+    </script>
 </head>
 <body>
-    <h1>AI Interview Coach</h1>
+    <div class="top-bar">
+        <h1 style="margin: 0;">AI Interview Coach</h1>
+        {% if questions %}
+        <form method="POST" style="margin: 0;" onsubmit="showLoading(this.querySelector('button'))">
+            <input type="hidden" name="action" value="reset">
+            <button type="submit" class="btn-reset">Start Over</button>
+        </form>
+        {% endif %}
+    </div>
     
     {% if error %}
     <div class="section error">
-        <h2>Error</h2>
-        <p>{{ error }}</p>
+        <p>⚠️ <strong>Error:</strong> {{ error }}</p>
     </div>
     {% endif %}
     
+    {% if not questions %}
     <div class="section">
-        <h2>1. Generate Questions</h2>
-        <form method="POST">
+        <h2>Step 1: Provide Context</h2>
+        <p style="color: #555;">Submit your resume and the target job description to generate highly tailored interview questions.</p>
+        <form method="POST" onsubmit="showLoading(this.querySelector('button'))">
             <input type="hidden" name="action" value="generate">
-            <label for="resume">Resume:</label>
-            <textarea name="resume" id="resume" placeholder="Paste your resume here..."></textarea>
             
-            <label for="job_description">Job Description:</label>
-            <textarea name="job_description" id="job_description" placeholder="Paste the job description here..."></textarea>
+            <label for="resume" style="font-weight: 500; display: block; margin-bottom: 5px;">Your Resume:</label>
+            <textarea name="resume" id="resume" placeholder="Paste your full resume here... (Required)" required></textarea>
+            
+            <label for="job_description" style="font-weight: 500; display: block; margin-bottom: 5px;">Job Description:</label>
+            <textarea name="job_description" id="job_description" placeholder="Paste the job description here... (Required)" required></textarea>
             
             <button type="submit">Generate Questions</button>
         </form>
     </div>
+    {% endif %}
 
     {% if questions %}
     <div class="section">
-        <h2>Generated Questions:</h2>
-        <h3>Technical</h3>
-        <ul>
-            {% for q in questions.technical %}
-                <li>{{ q }}</li>
-            {% endfor %}
-        </ul>
-        <h3>Behavioral</h3>
-        <ul>
-            {% for q in questions.behavioral %}
-                <li>{{ q }}</li>
-            {% endfor %}
-        </ul>
+        <h2>Step 2: Answer Questions</h2>
+        <p style="color: #555;">Review the generated questions below. Answer them one by one to get AI-powered feedback. You can revise and resubmit answers to improve your score.</p>
+        
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px;">Technical Questions</h3>
+        {% for q in questions.technical %}
+            <div class="card">
+                <p><strong>Question:</strong> {{ q }}</p>
+                <form method="POST" onsubmit="showLoading(this.querySelector('button'))">
+                    <input type="hidden" name="action" value="evaluate">
+                    <input type="hidden" name="question" value="{{ q }}">
+                    <textarea name="answer" placeholder="Type your detailed answer here... (Required)" required>{% if evaluations and q in evaluations %}{{ evaluations[q].answer }}{% endif %}</textarea>
+                    <button type="submit">Submit Answer</button>
+                </form>
+                {% if evaluations and q in evaluations %}
+                <div class="eval-result">
+                    <p><strong>Score:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">{{ evaluations[q].evaluation.score }} / 10</span></p>
+                    <p><strong>Feedback:</strong> {{ evaluations[q].evaluation.feedback }}</p>
+                    <p><strong>How to Improve:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for suggestion in evaluations[q].evaluation.improvement_suggestions %}
+                        <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 40px;">Behavioral Questions</h3>
+        {% for q in questions.behavioral %}
+            <div class="card">
+                <p><strong>Question:</strong> {{ q }}</p>
+                <form method="POST" onsubmit="showLoading(this.querySelector('button'))">
+                    <input type="hidden" name="action" value="evaluate">
+                    <input type="hidden" name="question" value="{{ q }}">
+                    <textarea name="answer" placeholder="Type your detailed answer here using the STAR method... (Required)" required>{% if evaluations and q in evaluations %}{{ evaluations[q].answer }}{% endif %}</textarea>
+                    <button type="submit">Submit Answer</button>
+                </form>
+                {% if evaluations and q in evaluations %}
+                <div class="eval-result">
+                    <p><strong>Score:</strong> <span style="font-size: 1.1em; font-weight: bold; color: #007bff;">{{ evaluations[q].evaluation.score }} / 10</span></p>
+                    <p><strong>Feedback:</strong> {{ evaluations[q].evaluation.feedback }}</p>
+                    <p><strong>How to Improve:</strong></p>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        {% for suggestion in evaluations[q].evaluation.improvement_suggestions %}
+                        <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
     </div>
     {% endif %}
 
-    <div class="section">
-        <h2>2. Evaluate Answer</h2>
-        <form method="POST">
-            <input type="hidden" name="action" value="evaluate">
-            
-            <label for="question">Interview Question:</label>
-            <textarea name="question" id="question" placeholder="Paste a question here..."></textarea>
-            
-            <label for="answer">Your Answer:</label>
-            <textarea name="answer" id="answer" placeholder="Type your answer here..."></textarea>
-            
-            <button type="submit">Evaluate Answer</button>
-        </form>
-    </div>
-
-    {% if evaluation %}
-    <div class="section">
-        <h2>Evaluation Result:</h2>
-        <p><strong>Score:</strong> {{ evaluation.score }} / 10</p>
-        <p><strong>Feedback:</strong> {{ evaluation.feedback }}</p>
-        <p><strong>Improvement Suggestions:</strong> {{ evaluation.improvement_suggestions }}</p>
-    </div>
-    {% endif %}
 </body>
 </html>

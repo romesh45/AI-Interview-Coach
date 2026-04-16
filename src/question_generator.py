@@ -11,7 +11,7 @@ def generate_questions(resume: str, job_description: str) -> dict:
         return {"error": "Resume and Job Description cannot be empty."}
         
     prompt = QUESTION_GENERATION_PROMPT.format(
-        resume=resume,
+        resume_text=resume,
         job_description=job_description
     )
     
@@ -21,6 +21,16 @@ def generate_questions(resume: str, job_description: str) -> dict:
             response_format={ "type": "json_object" },
             messages=[{"role": "user", "content": prompt}]
         )
-        return json.loads(response.choices[0].message.content)
+        raw_output = json.loads(response.choices[0].message.content)
+        
+        # Transform new prompt's array structure to the UI expected dict structure
+        formatted_questions = {"technical": [], "behavioral": []}
+        for item in raw_output.get("questions", []):
+            if item.get("type") == "technical":
+                formatted_questions["technical"].append(item.get("question"))
+            elif item.get("type") == "behavioral":
+                formatted_questions["behavioral"].append(item.get("question"))
+                
+        return formatted_questions
     except Exception as e:
         return {"error": f"Failed to generate questions: {str(e)}"}
