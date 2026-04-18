@@ -12,32 +12,32 @@ def generate_questions(resume: str, job_description: str) -> dict:
         resume_text=resume,
         job_description=job_description
     )
-    
+
     try:
         response = client.chat.completions.create(
-            model="gpt-5.4-mini",
+            model="gpt-4o-mini",
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
         raw_output = json.loads(response.choices[0].message.content)
         questions_list = raw_output.get("questions", [])
-        
+
         if not isinstance(questions_list, list):
             raise ValueError("Invalid JSON structure: 'questions' must be a list.")
-            
+
         formatted_questions = {"technical": [], "behavioral": []}
-        
+
         for item in questions_list:
             if not isinstance(item, dict):
                 continue
-                
+
             mapped_item = {
                 "question": item.get("question", ""),
                 "skill": item.get("skill", ""),
                 "difficulty": item.get("difficulty", "")
             }
-            
+
             if item.get("type") == "technical":
                 formatted_questions["technical"].append(mapped_item)
             elif item.get("type") == "behavioral":

@@ -7,8 +7,8 @@ Generate high-quality interview questions using the candidate resume and the job
 Rules:
 - Generate exactly 7 questions
 - 5 technical, then 2 behavioral
-- Make questions aligned with the job description’s must-have skills
-- Use the candidate’s past projects, tools, domains, and experience level when relevant
+- Make questions aligned with the job description's must-have skills
+- Use the candidate's past projects, tools, domains, and experience level when relevant
 - Mix difficulty: 2 easy-to-medium, 3 medium-to-hard, 2 behavioral
 - Prefer scenario-based and applied questions
 - Do not ask vague textbook questions unless the JD strongly requires fundamentals
@@ -38,7 +38,7 @@ Job Description:
 ANSWER_EVALUATION_PROMPT = """
 You are a strict but fair senior interviewer.
 
-Evaluate the candidate’s answer to the interview question.
+Evaluate the candidate's answer to the interview question.
 
 Scoring rubric:
 - 0–2: incorrect, irrelevant, or extremely weak
