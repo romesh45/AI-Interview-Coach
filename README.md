@@ -84,4 +84,4 @@ python tests.py
 - **PDF**: PyMuPDF (fitz)
 - **Database**: SQLite (local) via Flask-SQLAlchemy
 - **Frontend**: Vanilla HTML/CSS/JS, Chart.js, Google Fonts (Syne + DM Sans)
-- **Deploy**: Render.com (free tier)
+- **Deploy**: Render.com
