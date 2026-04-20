@@ -20,7 +20,7 @@ def generate_questions(resume: str, job_description: str) -> dict:
             messages=[{"role": "user", "content": prompt}]
         )
 
-        raw_output = json.loads(response.choices[0].message.content)
+        raw_output     = json.loads(response.choices[0].message.content)
         questions_list = raw_output.get("questions", [])
 
         if not isinstance(questions_list, list):
@@ -31,20 +31,25 @@ def generate_questions(resume: str, job_description: str) -> dict:
         for item in questions_list:
             if not isinstance(item, dict):
                 continue
-
             mapped_item = {
-                "question": item.get("question", ""),
-                "skill": item.get("skill", ""),
-                "difficulty": item.get("difficulty", "")
+                "question":   item.get("question", ""),
+                "skill":      item.get("skill", ""),
+                "difficulty": item.get("difficulty", "medium"),
             }
-
             if item.get("type") == "technical":
                 formatted_questions["technical"].append(mapped_item)
             elif item.get("type") == "behavioral":
                 formatted_questions["behavioral"].append(mapped_item)
 
-        if len(formatted_questions["technical"]) != 5 or len(formatted_questions["behavioral"]) != 2:
-            raise ValueError("Model failed to strictly generate 5 technical and 2 behavioral questions.")
+        # Soft floor — tolerate minor model variance (e.g. 4+3 instead of 5+2)
+        if len(formatted_questions["technical"]) < 3:
+            return {"error": "Could not generate enough technical questions. Please try again."}
+        if len(formatted_questions["behavioral"]) < 1:
+            return {"error": "Could not generate behavioral questions. Please try again."}
+
+        # Trim to expected counts
+        formatted_questions["technical"]  = formatted_questions["technical"][:5]
+        formatted_questions["behavioral"] = formatted_questions["behavioral"][:2]
 
         return formatted_questions
 

@@ -23,13 +23,17 @@ def evaluate_answer(question: str, answer: str) -> dict:
             raise ValueError("Invalid JSON structure: Output must be an object.")
 
         evaluation = {
-            "score": parsed_json.get("score", "N/A"),
+            "score":    parsed_json.get("score", "N/A"),
             "feedback": parsed_json.get("feedback", "No feedback provided."),
-            "strengths": parsed_json.get("strengths") if isinstance(parsed_json.get("strengths"), list) else [],
-            "gaps": parsed_json.get("gaps") if isinstance(parsed_json.get("gaps"), list) else [],
-            "improvement_suggestions": parsed_json.get("improvement_suggestions") if isinstance(parsed_json.get("improvement_suggestions"), list) else []
+            "strengths": (parsed_json.get("strengths")
+                          if isinstance(parsed_json.get("strengths"), list) else []),
+            "gaps": (parsed_json.get("gaps")
+                     if isinstance(parsed_json.get("gaps"), list) else []),
+            "improvement_suggestions": (
+                parsed_json.get("improvement_suggestions")
+                if isinstance(parsed_json.get("improvement_suggestions"), list) else []
+            ),
         }
-
         return evaluation
 
     except json.JSONDecodeError:
