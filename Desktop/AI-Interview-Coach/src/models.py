@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime, date
-from sqlalchemy.exc import IntegrityError, OperationalError
 import json
 import bcrypt
 
@@ -24,12 +23,6 @@ class User(UserMixin, db.Model):
 
     # Plan: 'free' | 'pro'
     plan = db.Column(db.String(20), default='free')
-
-    # Saved resume (nullable — user may not have uploaded one)
-    # NOTE: for PostgreSQL on Render, run: ALTER TABLE users ADD COLUMN resume_filename VARCHAR(200);
-    #                                      ALTER TABLE users ADD COLUMN resume_original_name VARCHAR(200);
-    resume_filename      = db.Column(db.String(200), nullable=True)
-    resume_original_name = db.Column(db.String(200), nullable=True)
 
     sessions = db.relationship('InterviewSession', backref='user', lazy=True,
                                 cascade='all, delete-orphan')
@@ -115,10 +108,7 @@ class InterviewSession(db.Model):
         if evals:
             self.average_score = round(sum(e.score for e in evals) / len(evals), 1)
             self.scores = [e.score for e in evals]
-        try:
-            db.session.commit()
-        except (IntegrityError, OperationalError):
-            db.session.rollback()
+        db.session.commit()
 
     def to_dict(self):
         return {

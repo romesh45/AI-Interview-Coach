@@ -1,19 +1,12 @@
-import os
 import json
 from openai import OpenAI
 from prompts import QUESTION_GENERATION_PROMPT
-from demo_responses import FAKE_QUESTIONS
-
-DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 client = OpenAI()
 
 def generate_questions(resume: str, job_description: str) -> dict:
     if not resume.strip() or not job_description.strip():
         return {"error": "Resume and Job Description cannot be empty."}
-
-    if DEMO_MODE:
-        return FAKE_QUESTIONS
 
     prompt = QUESTION_GENERATION_PROMPT.format(
         resume_text=resume,

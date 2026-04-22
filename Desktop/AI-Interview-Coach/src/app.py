@@ -1,10 +1,9 @@
 import os
+import re
 import sys
 import uuid
 
 sys.path.insert(0, os.path.dirname(__file__))
-
-from sqlalchemy.exc import IntegrityError, OperationalError
 
 from flask import (Flask, render_template, request, session,
                    redirect, url_for, jsonify, Blueprint)
@@ -48,9 +47,9 @@ def load_user(user_id):
 app.register_blueprint(auth_blueprint)
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 RESUME_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'resumes')
+RESUME_FILE_PATTERN = re.compile(r'resume_user_\d+_[a-f0-9]{32}\.pdf')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESUME_FOLDER, exist_ok=True)
 
 with app.app_context():
@@ -87,9 +86,19 @@ def index():
             else:
                 resume_text     = ''
                 job_description = request.form.get('job_description', '').strip()
+                uploaded_resume = session.get('uploaded_resume_filename')
+
+                if uploaded_resume:
+                    saved_resume_path = _resume_file_path(uploaded_resume)
+                    if os.path.exists(saved_resume_path):
+                        resume_text, parse_error = _extract_resume_text(saved_resume_path)
+                        if parse_error:
+                            error = parse_error
+                    else:
+                        session.pop('uploaded_resume_filename', None)
 
                 pdf_file = request.files.get('resume_pdf')
-                if pdf_file and pdf_file.filename.endswith('.pdf'):
+                if not resume_text and pdf_file and pdf_file.filename.lower().endswith('.pdf'):
                     safe_name = f'resume_{uuid.uuid4().hex}.pdf'
                     save_path = os.path.join(UPLOAD_FOLDER, safe_name)
                     pdf_file.save(save_path)
@@ -102,18 +111,7 @@ def index():
                         error = result['error']
                     else:
                         resume_text = result['text']
-                elif current_user.resume_filename:
-                    # No new upload — use the user's saved resume
-                    saved_path = os.path.join(RESUME_FOLDER, current_user.resume_filename)
-                    if os.path.exists(saved_path):
-                        result = extract_text_from_pdf(saved_path)
-                        if 'error' in result:
-                            error = result['error']
-                        else:
-                            resume_text = result['text']
-                    else:
-                        resume_text = request.form.get('resume', '').strip()
-                else:
+                elif not resume_text:
                     resume_text = request.form.get('resume', '').strip()
 
                 if not error:
@@ -133,15 +131,9 @@ def index():
                             )
                             interview.questions = result
                             db.session.add(interview)
-                            try:
-                                db.session.commit()
-                            except (IntegrityError, OperationalError):
-                                db.session.rollback()
-                                error = "Database error creating session. Please try again."
-                                interview = None
-                            if interview:
-                                session['active_session_id'] = interview.id
-                                active_session = interview
+                            db.session.commit()
+                            session['active_session_id'] = interview.id
+                            active_session = interview
 
         # ── EVALUATE ──────────────────────────────────────────────────────────
         elif action == 'evaluate':
@@ -182,12 +174,8 @@ def index():
                             )
                             ev.full_result = result
                             db.session.add(ev)
-                        try:
-                            db.session.commit()
-                            active_session.update_stats()
-                        except (IntegrityError, OperationalError):
-                            db.session.rollback()
-                            error = "Database error saving evaluation. Please try again."
+                        db.session.commit()
+                        active_session.update_stats()
 
         # ── RESET ─────────────────────────────────────────────────────────────
         elif action == 'reset':
@@ -203,7 +191,6 @@ def index():
         evaluations        = evaluations,
         error              = error,
         requests_remaining = current_user.requests_remaining(),
-        saved_resume       = current_user.resume_original_name,
     )
 
 
@@ -268,6 +255,7 @@ def dashboard():
 
 
 @main.route('/history')
+@main.route('/history/')
 @login_required
 def history():
     sessions = (InterviewSession.query
@@ -287,38 +275,13 @@ def session_detail(session_id):
                            interview=interview, evaluations=evaluations)
 
 
-@main.route('/profile')
-@login_required
-def profile():
-    sessions = InterviewSession.query.filter_by(user_id=current_user.id).all()
-    all_evals = (Evaluation.query
-                 .join(InterviewSession)
-                 .filter(InterviewSession.user_id == current_user.id)
-                 .all())
-    sessions_count = len(sessions)
-    all_scores     = [e.score for e in all_evals]
-    avg_score_all  = round(sum(all_scores) / len(all_scores), 1) if all_scores else 0
-    total_answers  = len(all_evals)
-    return render_template(
-        'profile.html',
-        sessions_count     = sessions_count,
-        avg_score_all      = avg_score_all,
-        total_answers      = total_answers,
-        requests_remaining = current_user.requests_remaining(),
-    )
-
-
 @main.route('/history/<int:session_id>/delete', methods=['POST'])
 @login_required
 def delete_session(session_id):
     interview = InterviewSession.query.filter_by(
         id=session_id, user_id=current_user.id).first_or_404()
     db.session.delete(interview)
-    try:
-        db.session.commit()
-    except (IntegrityError, OperationalError):
-        db.session.rollback()
-        return redirect(url_for('main.history'))
+    db.session.commit()
     if session.get('active_session_id') == session_id:
         session.pop('active_session_id', None)
     return redirect(url_for('main.history'))
@@ -347,7 +310,68 @@ def transcribe_audio():
             pass
         return jsonify({'text': transcript})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.exception('Audio transcription failed')
+        return jsonify({'error': 'Audio transcription failed'}), 500
+
+
+@main.route('/api/upload-resume', methods=['POST'])
+@login_required
+def upload_resume():
+    resume_pdf = request.files.get('resume_pdf') or request.files.get('resume')
+    if not resume_pdf or not resume_pdf.filename:
+        return jsonify({'error': 'No resume file provided'}), 400
+    if not resume_pdf.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Only PDF files are supported'}), 400
+
+    previous_resume = session.get('uploaded_resume_filename')
+    if previous_resume:
+        previous_path = _resume_file_path(previous_resume)
+        if os.path.exists(previous_path):
+            try:
+                os.remove(previous_path)
+            except OSError:
+                app.logger.warning('Failed to delete old resume file: %s', previous_path)
+
+    filename = f'resume_user_{current_user.id}_{uuid.uuid4().hex}.pdf'
+    save_path = _resume_file_path(filename)
+    resume_pdf.save(save_path)
+    resume_text, has_parse_error = _extract_resume_text(save_path)
+    if has_parse_error:
+        try:
+            os.remove(save_path)
+        except OSError:
+            app.logger.warning('Failed to delete invalid resume file: %s', save_path)
+        return jsonify({'error': 'Unable to parse resume PDF'}), 400
+
+    session['uploaded_resume_filename'] = filename
+    return jsonify({
+        'message': 'Resume uploaded successfully',
+        'filename': filename,
+        'text_length': len(resume_text),
+    })
+
+
+@main.route('/api/upload-resume', methods=['DELETE'])
+@login_required
+def delete_uploaded_resume():
+    filename = session.get('uploaded_resume_filename')
+    if not filename:
+        return jsonify({'error': 'No resume selected'}), 404
+    if not _is_valid_resume_filename(filename) or not _is_current_user_resume(filename):
+        app.logger.warning('Resume delete validation failed for user %s: %s', current_user.id, filename)
+        session.pop('uploaded_resume_filename', None)
+        return jsonify({'error': 'Resume not found'}), 404
+
+    session.pop('uploaded_resume_filename', None)
+
+    resume_path = _resume_file_path(filename)
+    if os.path.exists(resume_path):
+        try:
+            os.remove(resume_path)
+        except OSError:
+            return jsonify({'error': 'Unable to delete resume file'}), 500
+        return jsonify({'message': 'Resume deleted successfully'})
+    return jsonify({'error': 'Resume file not found'}), 404
 
 
 @main.route('/api/scores')
@@ -361,66 +385,6 @@ def api_scores():
     labels = [e.skill or f'Q{i+1}' for i, e in enumerate(evals)]
     avg    = round(sum(scores) / len(scores), 1) if scores else 0
     return jsonify({'scores': scores, 'labels': labels, 'average': avg})
-
-
-@main.route('/api/upload-resume', methods=['POST'])
-@login_required
-def upload_resume():
-    pdf_file = request.files.get('resume')
-    if not pdf_file:
-        return jsonify({'error': 'No file provided'}), 400
-    if not pdf_file.filename.lower().endswith('.pdf'):
-        return jsonify({'error': 'Only PDF files are accepted'}), 400
-    # Content-Length is not reliable with chunked encoding; check after saving
-    pdf_file.seek(0, 2)
-    size = pdf_file.tell()
-    pdf_file.seek(0)
-    if size > 5 * 1024 * 1024:
-        return jsonify({'error': 'File exceeds 5 MB limit'}), 413
-
-    # Delete old resume file if present
-    if current_user.resume_filename:
-        old_path = os.path.join(RESUME_FOLDER, current_user.resume_filename)
-        try:
-            if os.path.exists(old_path):
-                os.remove(old_path)
-        except Exception:
-            pass
-
-    safe_name     = f'{current_user.id}_{uuid.uuid4().hex}.pdf'
-    original_name = pdf_file.filename
-    save_path     = os.path.join(RESUME_FOLDER, safe_name)
-    pdf_file.save(save_path)
-
-    current_user.resume_filename      = safe_name
-    current_user.resume_original_name = original_name
-    try:
-        db.session.commit()
-    except (IntegrityError, OperationalError):
-        db.session.rollback()
-        return jsonify({'error': 'Database error saving resume'}), 500
-
-    return jsonify({'success': True, 'filename': safe_name, 'original_name': original_name})
-
-
-@main.route('/api/upload-resume', methods=['DELETE'])
-@login_required
-def delete_resume():
-    if current_user.resume_filename:
-        old_path = os.path.join(RESUME_FOLDER, current_user.resume_filename)
-        try:
-            if os.path.exists(old_path):
-                os.remove(old_path)
-        except Exception:
-            pass
-    current_user.resume_filename      = None
-    current_user.resume_original_name = None
-    try:
-        db.session.commit()
-    except (IntegrityError, OperationalError):
-        db.session.rollback()
-        return jsonify({'error': 'Database error'}), 500
-    return jsonify({'success': True})
 
 
 app.register_blueprint(main)
@@ -462,6 +426,27 @@ def _extract_job_title(jd: str) -> str:
         first = lines[0]
         return first[:80] if len(first) <= 80 else first[:77] + '...'
     return 'Software Engineer'
+
+
+def _resume_file_path(filename: str) -> str:
+    safe_name = os.path.basename(filename)
+    return os.path.join(RESUME_FOLDER, safe_name)
+
+
+def _extract_resume_text(file_path: str) -> tuple[str, bool]:
+    parsed = extract_text_from_pdf(file_path)
+    if 'error' in parsed:
+        app.logger.warning('Resume parsing failed for %s: %s', file_path, parsed.get('error'))
+        return '', True
+    return parsed.get('text', ''), False
+
+
+def _is_valid_resume_filename(filename: str) -> bool:
+    return bool(RESUME_FILE_PATTERN.fullmatch(filename))
+
+
+def _is_current_user_resume(filename: str) -> bool:
+    return filename.startswith(f'resume_user_{current_user.id}_')
 
 
 if __name__ == '__main__':

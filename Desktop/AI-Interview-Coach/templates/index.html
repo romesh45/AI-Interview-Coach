@@ -201,14 +201,12 @@
   <div class="nav-links">
     <a href="/dashboard">Dashboard</a>
     <a href="/history">History</a>
-    <a href="/profile">Profile</a>
 
-    {% if current_user.is_authenticated %}
     <span class="nav-quota {% if requests_remaining <= 2 %}low{% endif %}">
       {{ requests_remaining }}/{{ current_user.daily_limit() }} left today
     </span>
+
     <span class="nav-user">{{ current_user.email.split('@')[0] }}</span>
-    {% endif %}
     <a href="{{ url_for('auth.logout') }}" style="color:var(--ink3);">Log out</a>
     <span class="nav-badge">AI-Powered</span>
   </div>
@@ -253,20 +251,6 @@
       <input type="hidden" name="action" value="generate">
       <div class="form-group">
         <label class="field-label">Resume</label>
-
-        {% if saved_resume %}
-        <!-- Saved resume banner -->
-        <div id="saved-resume-banner" style="display:flex;align-items:center;gap:0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:0.75rem;">
-          <span style="font-size:1.1rem;">✅</span>
-          <div style="flex:1;">
-            <span style="font-size:0.875rem;font-weight:600;color:#166534;">Using saved resume:</span>
-            <span style="font-size:0.875rem;color:#166534;margin-left:0.25rem;">{{ saved_resume }}</span>
-          </div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleResumeReplace()" id="replace-btn">Replace</button>
-        </div>
-        <div id="resume-replace-area" style="display:none;">
-        {% endif %}
-
         <div class="tabs">
           <button type="button" class="tab-btn active" onclick="switchTab('paste', event)">Paste Text</button>
           <button type="button" class="tab-btn" onclick="switchTab('upload', event)">Upload PDF</button>
@@ -276,21 +260,12 @@
         </div>
         <div class="tab-pane" id="tab-upload">
           <div class="file-upload-area" onclick="document.getElementById('pdf-input').click()">
-            <input type="file" id="pdf-input" name="resume_pdf" accept=".pdf" onchange="showFileName(this); autoSaveResume(this)">
+            <input type="file" id="pdf-input" name="resume_pdf" accept=".pdf" onchange="showFileName(this)">
             <div class="file-icon">📄</div>
             <div class="file-upload-label"><strong>Click to upload</strong> your resume PDF</div>
             <div class="file-name-display" id="file-name-display"></div>
           </div>
         </div>
-
-        {% if saved_resume %}
-        </div><!-- /resume-replace-area -->
-        {% endif %}
-      </div>
-
-      <!-- Toast notification -->
-      <div id="resume-toast" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;background:#166534;color:#fff;padding:0.65rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:500;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
-        Resume saved ✓
       </div>
       <div class="form-group">
         <label class="field-label">Job Description</label>
@@ -549,38 +524,6 @@ function showFileName(input) {
     disp.textContent = '✓ ' + input.files[0].name;
     disp.style.display = 'block';
   }
-}
-function toggleResumeReplace() {
-  const area = document.getElementById('resume-replace-area');
-  const btn  = document.getElementById('replace-btn');
-  if (area.style.display === 'none') {
-    area.style.display = 'block';
-    btn.textContent = 'Cancel';
-  } else {
-    area.style.display = 'none';
-    btn.textContent = 'Replace';
-  }
-}
-function autoSaveResume(input) {
-  if (!input.files.length) return;
-  const fd = new FormData();
-  fd.append('resume', input.files[0]);
-  fetch('/api/upload-resume', { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        const toast = document.getElementById('resume-toast');
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2500);
-        // Update banner if present
-        const banner = document.getElementById('saved-resume-banner');
-        if (banner) {
-          const nameEl = banner.querySelector('span:last-of-type');
-          if (nameEl) nameEl.textContent = data.original_name;
-        }
-      }
-    })
-    .catch(() => {});
 }
 const _timers = {};
 function startTimer(id, seconds) {
