@@ -245,12 +245,15 @@
     <a href="/dashboard" class="active">Dashboard</a>
     <a href="/app">New Interview</a>
     <a href="/history">History</a>
+    <a href="/profile">Profile</a>
+    {% if current_user.is_authenticated %}
     <span class="nav-quota {% if requests_remaining <= 2 %}low{% endif %}">
       {{ requests_remaining }}/{{ current_user.daily_limit() }} left today
     </span>
     <span style="font-size:0.82rem;color:var(--ink2);font-weight:500;">
       {{ current_user.email.split('@')[0] }}
     </span>
+    {% endif %}
     <a href="{{ url_for('auth.logout') }}" style="color:var(--ink3);">Log out</a>
     <span class="nav-badge">AI-Powered</span>
   </div>

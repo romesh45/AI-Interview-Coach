@@ -1,12 +1,19 @@
+import os
 import json
 from openai import OpenAI
 from prompts import ANSWER_EVALUATION_PROMPT
+from demo_responses import fake_evaluate
+
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 client = OpenAI()
 
 def evaluate_answer(question: str, answer: str) -> dict:
     if not question.strip() or not answer.strip():
         return {"error": "Question and Answer cannot be empty."}
+
+    if DEMO_MODE:
+        return fake_evaluate(question, answer)
 
     prompt = ANSWER_EVALUATION_PROMPT.format(question=question, answer=answer)
 
