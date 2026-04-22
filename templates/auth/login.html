@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — InterviewAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0d0d0d; --ink2: #3a3a3a; --ink3: #777;
+      --paper: #faf9f7; --surface: #ffffff;
+      --border: #e8e4de; --border2: #d0ccc4;
+      --accent2: #e63946; --accent3: #2a9d8f;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px; --radius-lg: 20px;
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+    }
+    body {
+      font-family: var(--font-body); background: var(--paper); color: var(--ink);
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center; height: 60px;
+    }
+    .nav-logo {
+      font-family: var(--font-display); font-weight: 800; font-size: 1.15rem;
+      color: var(--ink); text-decoration: none; letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--accent2); }
+    .auth-wrap {
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; padding: 3rem 1.5rem;
+    }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 2.5rem;
+      width: 100%; max-width: 420px; box-shadow: var(--shadow-lg);
+    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-title {
+      font-family: var(--font-display); font-size: 1.6rem; font-weight: 800;
+      letter-spacing: -0.02em; margin-bottom: 0.35rem;
+    }
+    .auth-sub { font-size: 0.88rem; color: var(--ink3); }
+    .error-banner {
+      background: #fff5f5; border: 1px solid #fcc;
+      border-left: 4px solid var(--accent2); border-radius: var(--radius);
+      padding: 0.75rem 1rem; margin-bottom: 1.5rem;
+      color: #c0392b; font-size: 0.85rem; font-weight: 500;
+    }
+    .form-group { margin-bottom: 1.1rem; }
+    label.field-label {
+      display: block; font-size: 0.82rem; font-weight: 500;
+      color: var(--ink2); margin-bottom: 0.4rem;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%; font-family: var(--font-body); font-size: 0.9rem;
+      color: var(--ink); background: var(--paper);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.75rem 1rem; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      outline: none; border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(13,13,13,0.06);
+    }
+    .remember-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;
+    }
+    .remember-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+    .remember-row label { font-size: 0.85rem; color: var(--ink2); cursor: pointer; }
+    .btn-auth {
+      width: 100%; padding: 0.8rem; background: var(--ink); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-family: var(--font-display); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s, transform 0.15s;
+    }
+    .btn-auth:hover { background: #2a2a2a; transform: translateY(-1px); }
+    .auth-footer {
+      text-align: center; margin-top: 1.5rem;
+      font-size: 0.85rem; color: var(--ink3);
+    }
+    .auth-footer a {
+      color: var(--ink2); font-weight: 500; text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    .auth-footer a:hover { color: var(--ink); border-color: var(--ink); }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">Interview<span>AI</span></a>
+</nav>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Log in to continue your interview prep</div>
+    </div>
+    {% if error %}
+    <div class="error-banner">⚠ {{ error }}</div>
+    {% endif %}
+    <form method="POST">
+      <div class="form-group">
+        <label class="field-label" for="email">Email address</label>
+        <input type="email" id="email" name="email" required
+               placeholder="you@example.com"
+               value="{{ request.form.get('email', '') }}">
+      </div>
+      <div class="form-group">
+        <label class="field-label" for="password">Password</label>
+        <input type="password" id="password" name="password"
+               required placeholder="••••••••">
+      </div>
+      <div class="remember-row">
+        <input type="checkbox" id="remember" name="remember">
+        <label for="remember">Remember me for 30 days</label>
+      </div>
+      <button type="submit" class="btn-auth">Log in →</button>
+    </form>
+    <div class="auth-footer">
+      Don't have an account?
+      <a href="{{ url_for('auth.register') }}">Create one free</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
