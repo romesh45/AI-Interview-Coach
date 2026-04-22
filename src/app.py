@@ -46,7 +46,9 @@ def load_user(user_id):
 app.register_blueprint(auth_blueprint)
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads')
+RESUME_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'resumes')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(RESUME_FOLDER, exist_ok=True)
 
 with app.app_context():
     db.create_all()
@@ -82,9 +84,21 @@ def index():
             else:
                 resume_text     = ''
                 job_description = request.form.get('job_description', '').strip()
+                uploaded_resume = session.get('uploaded_resume_filename')
+
+                if uploaded_resume:
+                    saved_resume_path = _resume_file_path(uploaded_resume)
+                    if os.path.exists(saved_resume_path):
+                        result = extract_text_from_pdf(saved_resume_path)
+                        if 'error' in result:
+                            error = result['error']
+                        else:
+                            resume_text = result['text']
+                    else:
+                        session.pop('uploaded_resume_filename', None)
 
                 pdf_file = request.files.get('resume_pdf')
-                if pdf_file and pdf_file.filename.endswith('.pdf'):
+                if not resume_text and pdf_file and pdf_file.filename.lower().endswith('.pdf'):
                     safe_name = f'resume_{uuid.uuid4().hex}.pdf'
                     save_path = os.path.join(UPLOAD_FOLDER, safe_name)
                     pdf_file.save(save_path)
@@ -97,7 +111,7 @@ def index():
                         error = result['error']
                     else:
                         resume_text = result['text']
-                else:
+                elif not resume_text:
                     resume_text = request.form.get('resume', '').strip()
 
                 if not error:
@@ -241,6 +255,7 @@ def dashboard():
 
 
 @main.route('/history')
+@main.route('/history/')
 @login_required
 def history():
     sessions = (InterviewSession.query
@@ -298,6 +313,57 @@ def transcribe_audio():
         return jsonify({'error': str(e)}), 500
 
 
+@main.route('/api/upload-resume', methods=['POST'])
+@login_required
+def upload_resume():
+    resume_pdf = request.files.get('resume_pdf') or request.files.get('resume')
+    if not resume_pdf or not resume_pdf.filename:
+        return jsonify({'error': 'No resume file provided'}), 400
+    if not resume_pdf.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Only PDF files are supported'}), 400
+
+    previous_resume = session.get('uploaded_resume_filename')
+    if previous_resume:
+        previous_path = _resume_file_path(previous_resume)
+        if os.path.exists(previous_path):
+            os.remove(previous_path)
+
+    filename = f'resume_user_{current_user.id}_{uuid.uuid4().hex}.pdf'
+    save_path = _resume_file_path(filename)
+    resume_pdf.save(save_path)
+    parsed_resume = extract_text_from_pdf(save_path)
+    if 'error' in parsed_resume:
+        os.remove(save_path)
+        return jsonify({'error': parsed_resume['error']}), 400
+
+    session['uploaded_resume_filename'] = filename
+    return jsonify({
+        'message': 'Resume uploaded successfully',
+        'filename': filename,
+        'text': parsed_resume['text'],
+    })
+
+
+@main.route('/api/upload-resume', methods=['DELETE'])
+@login_required
+def delete_uploaded_resume():
+    payload = request.get_json(silent=True) or {}
+    filename = payload.get('filename') or request.args.get('filename') or session.get('uploaded_resume_filename')
+    if not filename:
+        return jsonify({'error': 'No resume selected'}), 404
+
+    resume_path = _resume_file_path(filename)
+    if os.path.exists(resume_path):
+        os.remove(resume_path)
+        if session.get('uploaded_resume_filename') == filename:
+            session.pop('uploaded_resume_filename', None)
+        return jsonify({'message': 'Resume deleted successfully'})
+
+    if session.get('uploaded_resume_filename') == filename:
+        session.pop('uploaded_resume_filename', None)
+    return jsonify({'error': 'Resume file not found'}), 404
+
+
 @main.route('/api/scores')
 @login_required
 def api_scores():
@@ -350,6 +416,10 @@ def _extract_job_title(jd: str) -> str:
         first = lines[0]
         return first[:80] if len(first) <= 80 else first[:77] + '...'
     return 'Software Engineer'
+
+
+def _resume_file_path(filename: str) -> str:
+    return os.path.join(RESUME_FOLDER, os.path.basename(filename))
 
 
 if __name__ == '__main__':
