@@ -23,6 +23,19 @@ def _resolve_demo_mode() -> bool:
 DEMO_MODE: bool = _resolve_demo_mode()
 
 
+def _is_quota_or_rate_limited(error_message: str) -> bool:
+    msg = (error_message or '').lower()
+    signals = [
+        '429',
+        'quota',
+        'resource exhausted',
+        'rate limit',
+        'too many requests',
+        'insufficient_quota',
+    ]
+    return any(signal in msg for signal in signals)
+
+
 # ── PUBLIC API ────────────────────────────────────────────────────────────────
 
 def generate_questions(resume: str, job_description: str) -> dict:
@@ -34,7 +47,11 @@ def generate_questions(resume: str, job_description: str) -> dict:
         from demo_data import get_demo_questions
         return get_demo_questions()
 
-    return _live_generate_questions(resume, job_description)
+    result = _live_generate_questions(resume, job_description)
+    if isinstance(result, dict) and _is_quota_or_rate_limited(result.get('error', '')):
+        from demo_data import get_demo_questions
+        return get_demo_questions()
+    return result
 
 
 def evaluate_answer(question: str, answer: str) -> dict:
@@ -46,7 +63,11 @@ def evaluate_answer(question: str, answer: str) -> dict:
         from demo_data import get_demo_evaluation
         return get_demo_evaluation()
 
-    return _live_evaluate_answer(question, answer)
+    result = _live_evaluate_answer(question, answer)
+    if isinstance(result, dict) and _is_quota_or_rate_limited(result.get('error', '')):
+        from demo_data import get_demo_evaluation
+        return get_demo_evaluation()
+    return result
 
 
 def transcribe_audio(audio_path: str) -> dict:
