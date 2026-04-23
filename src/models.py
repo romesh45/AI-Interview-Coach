@@ -73,7 +73,7 @@ class InterviewSession(db.Model):
     __tablename__ = 'interview_sessions'
 
     id                  = db.Column(db.Integer, primary_key=True)
-    user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     job_title           = db.Column(db.String(200), nullable=False, default='Unknown Role')
     resume_snippet      = db.Column(db.String(300), nullable=False, default='')
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
@@ -129,7 +129,7 @@ class Evaluation(db.Model):
     __tablename__ = 'evaluations'
 
     id              = db.Column(db.Integer, primary_key=True)
-    session_id      = db.Column(db.Integer, db.ForeignKey('interview_sessions.id'), nullable=False)
+    session_id      = db.Column(db.Integer, db.ForeignKey('interview_sessions.id'), nullable=False, index=True)
     question        = db.Column(db.Text, nullable=False)
     answer          = db.Column(db.Text, nullable=False)
     score           = db.Column(db.Float, nullable=False)

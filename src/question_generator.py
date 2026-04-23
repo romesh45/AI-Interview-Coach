@@ -1,8 +1,16 @@
 import json
-from openai import OpenAI
 from prompts import QUESTION_GENERATION_PROMPT
 
-client = OpenAI()
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        from openai import OpenAI
+        _client = OpenAI()
+    return _client
+
 
 def generate_questions(resume: str, job_description: str) -> dict:
     if not resume.strip() or not job_description.strip():
@@ -14,7 +22,7 @@ def generate_questions(resume: str, job_description: str) -> dict:
     )
 
     try:
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}]

@@ -133,6 +133,7 @@
     <div class="error-banner">⚠ {{ error }}</div>
     {% endif %}
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="field-label" for="email">Email address</label>
         <input type="email" id="email" name="email" required

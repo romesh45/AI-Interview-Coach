@@ -245,6 +245,7 @@
     <a href="/dashboard" class="active">Dashboard</a>
     <a href="/app">New Interview</a>
     <a href="/history">History</a>
+    <a href="/profile">Profile</a>
     <span class="nav-quota {% if requests_remaining <= 2 %}low{% endif %}">
       {{ requests_remaining }}/{{ current_user.daily_limit() }} left today
     </span>
@@ -257,6 +258,16 @@
 </nav>
 
 <div class="main">
+
+  {% if demo_mode %}
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:12px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;">
+    <span style="font-size:1rem;">🎭</span>
+    <div>
+      <strong style="font-size:0.85rem;color:#92400e;">Demo Mode</strong>
+      <span style="font-size:0.82rem;color:#78350f;"> — AI responses are simulated. Set <code>OPENAI_API_KEY</code> in <code>.env</code> for live AI.</span>
+    </div>
+  </div>
+  {% endif %}
 
   <div class="page-header">
     <div class="page-header-left">

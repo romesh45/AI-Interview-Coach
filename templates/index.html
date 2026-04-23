@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InterviewAI — Smart Mock Interview Coach</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -201,6 +202,7 @@
   <div class="nav-links">
     <a href="/dashboard">Dashboard</a>
     <a href="/history">History</a>
+    <a href="/profile">Profile</a>
 
     <span class="nav-quota {% if requests_remaining <= 2 %}low{% endif %}">
       {{ requests_remaining }}/{{ current_user.daily_limit() }} left today
@@ -236,6 +238,16 @@
 
 <div class="main">
 
+  {% if demo_mode %}
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:12px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;">
+    <span style="font-size:1rem;">🎭</span>
+    <div>
+      <strong style="font-size:0.85rem;color:#92400e;">Demo Mode</strong>
+      <span style="font-size:0.82rem;color:#78350f;"> — AI responses are simulated. Set <code>OPENAI_API_KEY</code> in <code>.env</code> for live AI.</span>
+    </div>
+  </div>
+  {% endif %}
+
   {% if error %}
   <div class="error-banner">⚠ {{ error }}</div>
   {% endif %}
@@ -248,6 +260,7 @@
       <span class="step-badge">STEP 1</span>
     </div>
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="generate">
       <div class="form-group">
         <label class="field-label">Resume</label>
@@ -285,6 +298,7 @@
   <div class="top-actions">
     <div class="page-title">Your Interview</div>
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="reset">
       <button type="submit" class="btn btn-ghost btn-sm">← Start Over</button>
     </form>
@@ -349,6 +363,7 @@
           <button type="button" class="btn btn-ghost btn-sm" onclick="startTimer('T{{ q_idx }}', 180)">Start</button>
         </div>
         <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="evaluate">
           <input type="hidden" name="question" value="{{ q }}">
           <input type="hidden" name="skill" value="{{ q_item.skill }}">
@@ -439,6 +454,7 @@
           <button type="button" class="btn btn-ghost btn-sm" onclick="startTimer('B{{ q_idx }}', 180)">Start</button>
         </div>
         <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="evaluate">
           <input type="hidden" name="question" value="{{ q }}">
           <input type="hidden" name="skill" value="{{ q_item.skill }}">
@@ -570,7 +586,12 @@ function transcribeAudio(blob, textareaId) {
   ta.placeholder = 'Transcribing…';
   const fd = new FormData();
   fd.append('audio', blob, 'recording.webm');
-  fetch('/api/transcribe', { method: 'POST', body: fd })
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  fetch('/api/transcribe', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken },
+    body: fd,
+  })
     .then(r => r.json())
     .then(data => { if (data.text) ta.value = (ta.value ? ta.value + ' ' : '') + data.text; })
     .catch(() => { ta.placeholder = 'Transcription failed. Please type.'; });

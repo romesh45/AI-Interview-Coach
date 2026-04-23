@@ -10,7 +10,7 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('interview.index'))
 
     error = None
 
@@ -33,7 +33,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user, remember=True)
-            return redirect(url_for('main.index'))
+            return redirect(url_for('interview.index'))
 
     return render_template('auth/register.html', error=error)
 
@@ -43,7 +43,7 @@ def register():
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('interview.index'))
 
     error = None
 
@@ -58,7 +58,7 @@ def login():
             remember  = request.form.get('remember') == 'on'
             login_user(user, remember=remember)
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.index'))
+            return redirect(next_page or url_for('interview.index'))
 
     return render_template('auth/login.html', error=error)
 
