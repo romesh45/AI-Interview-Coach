@@ -1,8 +1,16 @@
 import json
-from openai import OpenAI
 from prompts import ANSWER_EVALUATION_PROMPT
 
-client = OpenAI()
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        from openai import OpenAI
+        _client = OpenAI()
+    return _client
+
 
 def evaluate_answer(question: str, answer: str) -> dict:
     if not question.strip() or not answer.strip():
@@ -11,7 +19,7 @@ def evaluate_answer(question: str, answer: str) -> dict:
     prompt = ANSWER_EVALUATION_PROMPT.format(question=question, answer=answer)
 
     try:
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model="gpt-4o-mini",
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}]

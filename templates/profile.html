@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — InterviewAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0d0d0d; --ink2: #3a3a3a; --ink3: #777;
+      --paper: #faf9f7; --surface: #ffffff;
+      --border: #e8e4de; --border2: #d0ccc4;
+      --accent: #1a1a2e; --accent2: #e63946; --accent3: #2a9d8f; --accent4: #f4a261;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px; --radius-lg: 20px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    body { font-family: var(--font-body); background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center;
+      justify-content: space-between; height: 60px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; letter-spacing: -0.02em; }
+    .nav-logo span { color: var(--accent2); }
+    .nav-links { display: flex; align-items: center; gap: 1.25rem; }
+    .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--ink2); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.active { color: var(--ink); border-bottom: 2px solid var(--ink); padding-bottom: 2px; }
+    .nav-quota { font-size: 0.78rem; color: var(--ink3); font-weight: 500; background: var(--paper); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; }
+    .nav-quota.low { color: var(--accent2); border-color: #fcc; background: #fff5f5; }
+
+    .main { max-width: 680px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+    .page-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .page-sub { font-size: 0.88rem; color: var(--ink3); margin-bottom: 2rem; }
+
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 2rem;
+      box-shadow: var(--shadow); margin-bottom: 1.25rem;
+    }
+    .profile-card-title {
+      font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3);
+      margin-bottom: 1.25rem; padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.65rem 0; border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-label { font-size: 0.85rem; color: var(--ink3); font-weight: 500; }
+    .info-value { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
+
+    .stat-row {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .stat-box {
+      background: var(--paper); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.1rem 1.25rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-display); font-size: 2rem;
+      font-weight: 800; line-height: 1; margin-bottom: 0.3rem;
+    }
+    .stat-lbl { font-size: 0.78rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .badge-status {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .badge-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-no { background: var(--paper); color: var(--ink3); border: 1px solid var(--border2); }
+
+    .quota-bar-wrap { margin-top: 0.6rem; }
+    .quota-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 0.4rem; }
+    .quota-fill { height: 100%; border-radius: 3px; background: var(--accent3); transition: width 0.4s; }
+    .quota-fill.low { background: var(--accent2); }
+
+    .action-links { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.65rem 1.25rem; border-radius: 8px;
+      font-family: var(--font-body); font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; border: none; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #2a2a2a; transform: translateY(-1px); }
+    .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--ink2); }
+    .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+    .btn-danger { background: none; border: 1px solid #fcc; color: var(--accent2); }
+    .btn-danger:hover { background: #fff5f5; }
+
+    @media (max-width: 600px) {
+      .stat-row { grid-template-columns: 1fr; }
+      nav { padding: 0 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Interview<span>AI</span></a>
+  <div class="nav-links">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/app">New Interview</a>
+    <a href="/history">History</a>
+    <a href="/profile" class="active">Profile</a>
+    <span class="nav-quota {% if requests_remaining <= 2 %}low{% endif %}">
+      {{ requests_remaining }}/{{ current_user.daily_limit() }} left today
+    </span>
+    <a href="{{ url_for('auth.logout') }}" style="color:var(--ink3);">Log out</a>
+  </div>
+</nav>
+
+<div class="main">
+
+  {% if demo_mode %}
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:12px;padding:0.75rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.75rem;">
+    <span style="font-size:1rem;">🎭</span>
+    <div>
+      <strong style="font-size:0.85rem;color:#92400e;">Demo Mode</strong>
+      <span style="font-size:0.82rem;color:#78350f;"> — AI responses are simulated. Set <code>OPENAI_API_KEY</code> in <code>.env</code> for live AI.</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="page-title">Your Profile</div>
+  <div class="page-sub">Account details and usage stats</div>
+
+  <!-- Account Info -->
+  <div class="profile-card">
+    <div class="profile-card-title">Account</div>
+    <div class="info-row">
+      <span class="info-label">Email</span>
+      <span class="info-value">{{ current_user.email }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Member since</span>
+      <span class="info-value">{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Plan</span>
+      <span class="info-value" style="text-transform:capitalize;">{{ current_user.plan }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Resume</span>
+      <span class="info-value">
+        {% if has_resume %}
+          <span class="badge-status badge-ok">✓ Uploaded</span>
+        {% else %}
+          <span class="badge-status badge-no">Not uploaded</span>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Usage Stats -->
+  <div class="profile-card">
+    <div class="profile-card-title">Usage</div>
+
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--accent3);">{{ total_sessions }}</div>
+        <div class="stat-lbl">Interview Sessions</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--accent2);">{{ requests_remaining }}</div>
+        <div class="stat-lbl">AI Credits Left Today</div>
+      </div>
+    </div>
+
+    <div class="quota-bar-wrap" style="margin-top:1.25rem;">
+      {% set used = current_user.daily_limit() - requests_remaining %}
+      {% set pct = ((used / current_user.daily_limit()) * 100)|int %}
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--ink3);margin-bottom:0.3rem;">
+        <span>Daily usage</span>
+        <span>{{ used }} / {{ current_user.daily_limit() }} used</span>
+      </div>
+      <div class="quota-track">
+        <div class="quota-fill {% if requests_remaining <= 2 %}low{% endif %}" style="width:{{ pct }}%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-links">
+    <a href="/app" class="btn btn-primary">+ New Interview</a>
+    <a href="/history" class="btn btn-ghost">View History</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Log out</a>
+  </div>
+
+</div>
+</body>
+</html>
