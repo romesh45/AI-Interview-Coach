@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Past Sessions — InterviewAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0d0d0d; --ink2: #3a3a3a; --ink3: #777;
+      --paper: #faf9f7; --surface: #ffffff;
+      --border: #e8e4de; --border2: #d0ccc4;
+      --accent2: #e63946; --accent3: #2a9d8f; --accent4: #f4a261;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px; --radius-lg: 20px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    body { font-family: var(--font-body); background: var(--paper); color: var(--ink); min-height: 100vh; }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
+      height: 60px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+    .nav-logo span { color: var(--accent2); }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--ink2); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .main { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .page-header { margin-bottom: 2rem; }
+    .page-title { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+    .page-sub { font-size: 0.9rem; color: var(--ink3); margin-top: 0.35rem; }
+    .session-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 1.5rem;
+      text-decoration: none; color: inherit; transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .session-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .session-score-ring {
+      flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 1.2rem; font-weight: 800;
+    }
+    .session-info { flex: 1; min-width: 0; }
+    .session-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem; }
+    .session-meta { font-size: 0.8rem; color: var(--ink3); }
+    .mini-bar { width: 80px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .mini-bar-fill { height: 100%; border-radius: 2px; }
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: 8px; font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; text-decoration: none; transition: all 0.2s; }
+    .btn-danger-ghost { background: none; border: 1px solid #fcc; color: var(--accent2); }
+    .btn-danger-ghost:hover { background: #fff5f5; }
+    .empty-state { text-align: center; padding: 4rem 1rem; color: var(--ink3); }
+    .empty-state h3 { font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--ink2); }
+    .empty-state a { color: var(--ink); font-weight: 500; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">Interview<span>AI</span></a>
+  <div class="nav-links">
+    <a href="/app">New Interview</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/profile">Profile</a>
+    <a href="{{ url_for('auth.logout') }}" style="color:var(--ink3);">Log out</a>
+  </div>
+</nav>
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Past Sessions</div>
+    <div class="page-sub">Your last 20 interview sessions</div>
+  </div>
+  {% if sessions %}
+    {% for s in sessions %}
+    {% set avg = s.average_score %}
+    {% set score_color = '#2a9d8f' if avg >= 7 else ('#f4a261' if avg >= 4 else '#e63946') %}
+    {% set score_bg = '#ecfdf5' if avg >= 7 else ('#fffbeb' if avg >= 4 else '#fef2f2') %}
+    <div style="display:flex;align-items:stretch;gap:0;margin-bottom:1rem;">
+      <a href="/history/{{ s.id }}" class="session-card" style="flex:1;margin-bottom:0;border-radius:20px 0 0 20px;border-right:none;">
+        <div class="session-score-ring" style="background:{{ score_bg }};color:{{ score_color }};">{{ avg }}</div>
+        <div class="session-info">
+          <div class="session-title">{{ s.job_title }}</div>
+          <div class="session-meta">{{ s.created_at.strftime('%b %d, %Y') }} · {{ s.answered_questions }}/{{ s.total_questions }} answered</div>
+          <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.4rem;">
+            <div class="mini-bar">
+              <div class="mini-bar-fill" style="width:{{ ((s.answered_questions / s.total_questions) * 100)|int if s.total_questions > 0 else 0 }}%;background:{{ score_color }};"></div>
+            </div>
+            <span style="font-size:0.75rem;color:var(--ink3);">{{ ((s.answered_questions / s.total_questions) * 100)|int if s.total_questions > 0 else 0 }}% complete</span>
+          </div>
+        </div>
+      </a>
+      <form method="POST" action="/history/{{ s.id }}/delete" onsubmit="return confirm('Delete this session?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger-ghost" style="height:100%;border-radius:0 20px 20px 0;border:1px solid var(--border);border-left:none;">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <h3>No sessions yet</h3>
+    <p>Start your first mock interview <a href="/">here</a>.</p>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

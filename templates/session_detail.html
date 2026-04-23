@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Detail — InterviewAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0d0d0d; --ink2: #3a3a3a; --ink3: #777;
+      --paper: #faf9f7; --surface: #ffffff;
+      --border: #e8e4de; --border2: #d0ccc4;
+      --accent2: #e63946; --accent3: #2a9d8f; --accent4: #f4a261;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px; --radius-lg: 20px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    body { font-family: var(--font-body); background: var(--paper); color: var(--ink); }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
+      height: 60px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+    .nav-logo span { color: var(--accent2); }
+    .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--ink2); text-decoration: none; }
+    .main { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .back-link { font-size: 0.85rem; color: var(--ink3); text-decoration: none; margin-bottom: 1.5rem; display: inline-block; }
+    .back-link:hover { color: var(--ink); }
+    .detail-header {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow); display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center;
+    }
+    .detail-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .detail-meta { font-size: 0.82rem; color: var(--ink3); }
+    .detail-score-big { text-align: center; font-family: var(--font-display); font-size: 3rem; font-weight: 800; }
+    .detail-score-label { font-size: 0.75rem; color: var(--ink3); text-align: center; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .chart-card-title { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; }
+    .chart-wrap { height: 160px; }
+    .eval-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 1rem; overflow: hidden; box-shadow: var(--shadow); }
+    .eval-card-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border); }
+    .score-pill { font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .badge { font-size: 0.7rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .badge-skill { background: #eef2ff; color: #3730a3; }
+    .q-preview { font-size: 0.88rem; color: var(--ink2); flex: 1; line-height: 1.5; }
+    .eval-card-body { padding: 1rem 1.25rem; }
+    .answer-block { background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--ink2); margin-bottom: 0.75rem; line-height: 1.6; }
+    .feedback-text { font-size: 0.88rem; color: var(--ink2); line-height: 1.6; }
+    .section-label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink3); margin-bottom: 0.4rem; margin-top: 0.75rem; }
+    ul.detail-list { list-style: none; }
+    ul.detail-list li { font-size: 0.82rem; color: var(--ink2); padding: 2px 0 2px 1rem; position: relative; }
+    ul.detail-list li::before { content: '·'; position: absolute; left: 0; color: var(--ink3); }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">Interview<span>AI</span></a>
+  <div class="nav-links">
+    <a href="/history">← All Sessions</a>
+    <a href="/dashboard" style="margin-left:1rem;">Dashboard</a>
+    <a href="/profile" style="margin-left:1rem;">Profile</a>
+  </div>
+</nav>
+<div class="main">
+  <a href="/history" class="back-link">← Back to history</a>
+  <div class="detail-header">
+    <div>
+      <div class="detail-title">{{ interview.job_title }}</div>
+      <div class="detail-meta">
+        {{ interview.created_at.strftime('%B %d, %Y at %I:%M %p') }} ·
+        {{ interview.answered_questions }}/{{ interview.total_questions }} questions answered
+      </div>
+    </div>
+    {% set avg = interview.average_score %}
+    {% set score_color = '#2a9d8f' if avg >= 7 else ('#f4a261' if avg >= 4 else '#e63946') %}
+    <div>
+      <div class="detail-score-big" style="color:{{ score_color }}">{{ avg }}</div>
+      <div class="detail-score-label">avg / 10</div>
+    </div>
+  </div>
+
+  {% if evaluations %}
+  <div class="chart-card">
+    <div class="chart-card-title">Score breakdown</div>
+    <div class="chart-wrap"><canvas id="detailChart"></canvas></div>
+  </div>
+
+  {% for ev in evaluations %}
+  {% set score_color = '#2a9d8f' if ev.score >= 7 else ('#f4a261' if ev.score >= 4 else '#e63946') %}
+  {% set score_bg = '#ecfdf5' if ev.score >= 7 else ('#fffbeb' if ev.score >= 4 else '#fef2f2') %}
+  <div class="eval-card">
+    <div class="eval-card-header">
+      <span class="score-pill" style="background:{{ score_bg }};color:{{ score_color }};">{{ ev.score }}/10</span>
+      {% if ev.skill %}<span class="badge badge-skill">{{ ev.skill }}</span>{% endif %}
+      <div class="q-preview">{{ ev.question[:120] }}{% if ev.question|length > 120 %}…{% endif %}</div>
+    </div>
+    <div class="eval-card-body">
+      <div class="section-label">Your Answer</div>
+      <div class="answer-block">{{ ev.answer }}</div>
+      <div class="section-label">Feedback</div>
+      <div class="feedback-text">{{ ev.feedback }}</div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p style="color:var(--ink3);text-align:center;padding:3rem;">No evaluations recorded for this session.</p>
+  {% endif %}
+</div>
+
+{% if evaluations %}
+<script>
+const labels = [{% for ev in evaluations %}'{{ ev.skill or ("Q" + loop.index|string) }}',{% endfor %}];
+const scores = [{% for ev in evaluations %}{{ ev.score }},{% endfor %}];
+const colors = scores.map(s => s >= 7 ? '#2a9d8f' : (s >= 4 ? '#f4a261' : '#e63946'));
+new Chart(document.getElementById('detailChart'), {
+  type: 'bar',
+  data: { labels, datasets: [{ data: scores, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 0, max: 10, grid: { color: '#e8e4de' }, ticks: { stepSize: 2, font: { family: 'DM Sans' }, color: '#777' } },
+      x: { grid: { display: false }, ticks: { font: { family: 'DM Sans' }, color: '#777' } }
+    }
+  }
+});
+</script>
+{% endif %}
+</body>
+</html>
