@@ -3,7 +3,7 @@ AI service layer — single entry point for all AI operations.
 
 Demo mode is automatically enabled when:
     1. DEMO_MODE=true is set explicitly, OR
-    2. neither OPENAI_API_KEY nor GEMINI_API_KEY is set
+    2. neither OPENAI_API_KEY, GEMINI_API_KEY, nor GROQ_API_KEY is set
 
 When demo mode is active, all functions return realistic mock data so
 the app is fully explorable without an API key.
@@ -17,7 +17,8 @@ def _resolve_demo_mode() -> bool:
         return True
     has_openai = bool(os.environ.get('OPENAI_API_KEY', '').strip())
     has_gemini = bool(os.environ.get('GEMINI_API_KEY', '').strip())
-    return not (has_openai or has_gemini)
+    has_groq = bool(os.environ.get('GROQ_API_KEY', '').strip())
+    return not (has_openai or has_gemini or has_groq)
 
 
 DEMO_MODE: bool = _resolve_demo_mode()

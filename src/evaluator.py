@@ -7,14 +7,18 @@ _client = None
 
 def _resolve_provider() -> str:
     provider = os.environ.get('AI_PROVIDER', 'auto').strip().lower()
-    if provider in {'openai', 'gemini'}:
+    if provider in {'openai', 'gemini', 'groq'}:
         return provider
+    if os.environ.get('GROQ_API_KEY', '').strip():
+        return 'groq'
     if os.environ.get('GEMINI_API_KEY', '').strip():
         return 'gemini'
     return 'openai'
 
 
 def _resolve_model(provider: str) -> str:
+    if provider == 'groq':
+        return os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile').strip() or 'llama-3.3-70b-versatile'
     if provider == 'gemini':
         return os.environ.get('GEMINI_MODEL', 'gemini-2.0-flash').strip() or 'gemini-2.0-flash'
     return os.environ.get('OPENAI_MODEL', 'gpt-4o-mini').strip() or 'gpt-4o-mini'
@@ -25,7 +29,12 @@ def _get_client():
     if _client is None:
         from openai import OpenAI
         provider = _resolve_provider()
-        if provider == 'gemini':
+        if provider == 'groq':
+            _client = OpenAI(
+                api_key=os.environ.get('GROQ_API_KEY', '').strip(),
+                base_url='https://api.groq.com/openai/v1'
+            )
+        elif provider == 'gemini':
             _client = OpenAI(
                 api_key=os.environ.get('GEMINI_API_KEY', '').strip(),
                 base_url='https://generativelanguage.googleapis.com/v1beta/openai/'
