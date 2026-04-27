@@ -2,7 +2,7 @@ Flask==3.0.0
 openai==1.6.1
 httpx==0.27.2
 python-dotenv==1.0.0
-PyMuPDF==1.23.8
+pypdf
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1

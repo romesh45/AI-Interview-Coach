@@ -1,14 +1,13 @@
 import os
 
 def extract_text_from_pdf(file_path: str) -> dict:
-    """Extract text from a PDF file using PyMuPDF."""
+    """Extract text from a PDF file using pypdf."""
     try:
-        import fitz  # PyMuPDF
-        doc  = fitz.open(file_path)
+        from pypdf import PdfReader
+        reader = PdfReader(file_path)
         text = ""
-        for page in doc:
-            text += page.get_text()
-        doc.close()
+        for page in reader.pages:
+            text += (page.extract_text() or "")
 
         text = text.strip()
         if not text:
